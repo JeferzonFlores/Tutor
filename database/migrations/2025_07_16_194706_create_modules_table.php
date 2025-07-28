@@ -8,23 +8,28 @@ class CreateModulesTable extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('modules', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
+            $table->string('nombre');
+            $table->text('descripcion')->nullable();
+            $table->integer('orden')->comment('Order of the module within its materia');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+        });
+
+        Schema::table('modules', function (Blueprint $table) {
+            $table->unique(['materia_id', 'orden']);
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('modules');
     }

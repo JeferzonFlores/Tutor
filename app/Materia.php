@@ -25,4 +25,10 @@ class Materia extends Model
         {
             return $this->belongsToMany(Student::class, 'materia_student', 'materia_id', 'student_id')->withTimestamps();
         }
+// En app/Materia.php
+public function modules()
+{
+    return $this->hasMany(Module::class, 'materia_id');
+}
+
 }

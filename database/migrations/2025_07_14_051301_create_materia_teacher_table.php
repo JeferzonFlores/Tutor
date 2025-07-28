@@ -17,8 +17,10 @@ class CreateMateriaTeacherTable extends Migration
             $table->id();
             $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
             $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-            $table->unique(['materia_id', 'teacher_id']); // Evita asignaciones duplicadas
+           // $table->unique(['materia_id', 'teacher_id']); // Evita asignaciones duplicadas
             $table->timestamps();
+
+          //  $table->unique(['materia_id', 'teacher_id']);
         });
     }
 

@@ -1,5 +1,7 @@
     <?php
 
+    use App\Http\Controllers\AdminModuleController;
+    use App\Http\Controllers\Teacher\LessonController;
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Route;
 
@@ -44,19 +46,19 @@
 
         Route::resource('materias', 'Admin\AdminMateriaController')->except(['show']);
 
-            // Rutas CRUD para Asignación Materia-Docente
-    // Solo necesitamos index y store para añadir, y destroy para eliminar
-    Route::get('asignacion-docente', 'Admin\AdminMateriaTeacherController@index')->name('materia-teacher.index');
-    Route::post('asignacion-docente', 'Admin\AdminMateriaTeacherController@store')->name('materia-teacher.store');
-    Route::delete('asignacion-docente', 'Admin\AdminMateriaTeacherController@destroy')->name('materia-teacher.destroy');
+        // Rutas CRUD para Asignación Materia-Docente
+        // Solo necesitamos index y store para añadir, y destroy para eliminar
+        Route::get('asignacion-docente', 'Admin\AdminMateriaTeacherController@index')->name('materia-teacher.index');
+        Route::post('asignacion-docente', 'Admin\AdminMateriaTeacherController@store')->name('materia-teacher.store');
+        Route::delete('asignacion-docente', 'Admin\AdminMateriaTeacherController@destroy')->name('materia-teacher.destroy');
 
-    // Rutas CRUD para Asignación Materia-Estudiante
-    // Solo necesitamos index y store para añadir, y destroy para eliminar
-    Route::get('asignacion-estudiante', 'Admin\AdminMateriaStudentController@index')->name('materia-student.index');
-    Route::post('asignacion-estudiante', 'Admin\AdminMateriaStudentController@store')->name('materia-student.store');
-    Route::delete('asignacion-estudiante', 'Admin\AdminMateriaStudentController@destroy')->name('materia-student.destroy');
+        // Rutas CRUD para Asignación Materia-Estudiante
+        // Solo necesitamos index y store para añadir, y destroy para eliminar
+        Route::get('asignacion-estudiante', 'Admin\AdminMateriaStudentController@index')->name('materia-student.index');
+        Route::post('asignacion-estudiante', 'Admin\AdminMateriaStudentController@store')->name('materia-student.store');
+        Route::delete('asignacion-estudiante', 'Admin\AdminMateriaStudentController@destroy')->name('materia-student.destroy');
 
-    
+
         // Rutas para la gestión de usuarios (desde el panel del administrador)
         Route::get('/usuarios', function () {
             return view('administrador.usuarios.lista');
@@ -71,6 +73,18 @@
             return view('administrador.contenido.videos');
         })->name('vid');
 
+
+        // Placeholder for your content route, adjust if it's a resource
+        Route::get('/contenido', 'AdminModuleController@index')->name('contenido-lista');
+
+
+        // --- Módulos Routes (Add these) ---
+        Route::resource('modules', 'AdminModuleController');
+
+        // Custom route for toggling module active status
+        Route::post('modules/{module}/toggle-active', 'AdminModuleController@toggleActive')
+            ->name('modules.toggle-active');
+        // --- End Módulos Routes ---
         // Rutas para la gestión de exámenes (desde el panel del administrador)
         Route::get('/ListaExamen/{id}', 'TemaController@listaExamen')->name('examenes');
         Route::post('/NuevoExamen', 'TemaController@crearExamen')->name('EX');
@@ -116,10 +130,27 @@
 
         // Rutas protegidas para docentes (requieren autenticación con el guard 'teacher')
         Route::middleware('auth:teacher')->group(function () {
-            // TeacherDashboardController se resolverá como App\Http\Controllers\TeacherDashboardController
-            Route::get('/dashboard', 'TeacherController@index')->name('dashboard');
-            // Agrega aquí más rutas específicas para docentes, por ejemplo:
-            // Route::get('/mis-cursos', 'TeacherController@myCourses')->name('my_courses');
+            Route::get('/dashboard', 'Teacher\TeacherDashboardController@index')->name('dashboard'); // <--- ¡AQUÍ ESTÁ EL CAMBIO!
+            Route::resource('modules.lessons', 'Teacher\LessonController')->except(['show']);
+
+
+            Route::post('lessons/{lesson}/toggle-published', [LessonController::class, 'togglePublished'])->name('lessons.toggle-published'); // No necesitamos la ruta 'show' individual para una lección en este CRUD
+            // Gestión de Lecciones por Módulo (Rutear directamente al LessonController)
+            // La vista principal de las lecciones de un módulo específico: /teacher/modules/{module}/lessons
+            //Route::get('modules/{module}/lessons', 'App\Http\Controllers\Teacher\LessonController@index')->name('modules.lessons.index');
+
+            // Rutas CRUD anidadas para Lecciones dentro de un Módulo
+            // Esto generará rutas como:
+            // - /teacher/modules/{module}/lessons/create
+            // - /teacher/modules/{module}/lessons (POST para store)
+            // - /teacher/modules/{module}/lessons/{lesson}/edit
+            // - /teacher/modules/{module}/lessons/{lesson} (PUT/PATCH para update)
+            // - /teacher/modules/{module}/lessons/{lesson} (DELETE para destroy)
+            // Usamos 'except(['index'])' porque ya tenemos una ruta 'index' específica arriba.
+            // Route::resource('modules.lessons', 'App\Http\Controllers\Teacher\LessonController')->except(['index']);
+
+            // Ruta personalizada para cambiar el estado de publicación de una lección
+            // (por ejemplo, para que el docente pueda activar/desactivar la visibilidad de la lección)
+            //  Route::post('lessons/{lesson}/toggle-published', 'App\Http\Controllers\Teacher\LessonController@togglePublished')->name('lessons.toggle-published');
         });
     });
-    
